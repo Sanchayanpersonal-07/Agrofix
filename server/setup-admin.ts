@@ -23,7 +23,8 @@ export async function setupAdminUser() {
         username: 'admin',
         password: hashedPassword,
         email: 'admin@agrofix.com',
-        role: 'admin'
+        role: 'admin',
+        name: 'Admin'
       });
       
       console.log('Admin user created successfully:', adminUser.username);
