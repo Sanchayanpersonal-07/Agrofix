@@ -541,7 +541,8 @@ export class NeonDBStorage implements IStorage {
       return {
         ...order,
         totalAmount: Number(order.totalAmount),
-        userId: order.userId === null ? undefined : order.userId
+        userId: order.userId === null ? undefined : order.userId,
+        emailNotified: order.emailNotified === null ? undefined : order.emailNotified
       };
     } catch (error) {
       console.error(`Error getting order ${id}:`, error);
@@ -588,7 +589,9 @@ export class NeonDBStorage implements IStorage {
       const updatedOrder = result[0];
       return {
         ...updatedOrder,
-        totalAmount: Number(updatedOrder.totalAmount)
+        totalAmount: Number(updatedOrder.totalAmount),
+        userId: updatedOrder.userId === null ? undefined : updatedOrder.userId,
+        emailNotified: updatedOrder.emailNotified === null ? undefined : updatedOrder.emailNotified
       };
     } catch (error) {
       console.error(`Error updating order status ${id}:`, error);
@@ -606,7 +609,9 @@ export class NeonDBStorage implements IStorage {
       
       return result.map(order => ({
         ...order,
-        totalAmount: Number(order.totalAmount)
+        totalAmount: Number(order.totalAmount),
+        userId: order.userId === null ? undefined : order.userId,
+        emailNotified: order.emailNotified === null ? undefined : order.emailNotified
       }));
     } catch (error) {
       console.error(`Error getting orders for user ${userId}:`, error);

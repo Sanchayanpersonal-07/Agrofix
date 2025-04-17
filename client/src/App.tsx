@@ -5,16 +5,20 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
+import AuthPage from "@/pages/auth-page";
 import Header from "@/components/layout/Header";
 import { CartProvider } from "@/store/CartContext";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
 
 function Router() {
   return (
     <>
       <Header />
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/admin" component={Admin} />
+        <ProtectedRoute path="/" component={Home} />
+        <AdminRoute path="/admin" component={Admin} />
+        <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>
     </>
@@ -24,10 +28,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <Router />
-        <Toaster />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Router />
+          <Toaster />
+        </CartProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
