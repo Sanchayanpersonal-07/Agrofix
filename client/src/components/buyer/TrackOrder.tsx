@@ -32,14 +32,31 @@ const TrackOrder = ({ onOrderTracked }: TrackOrderProps) => {
   const onSubmit = async (data: z.infer<typeof trackingSchema>) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest('GET', `/api/orders/${data.orderId}`, undefined);
+      const orderId = parseInt(data.orderId);
+      if (isNaN(orderId)) {
+        throw new Error('Invalid order ID format');
+      }
+      
+      const response = await apiRequest('GET', `/api/orders/${orderId}`, undefined);
+      if (!response.ok) {
+        throw new Error('Order not found');
+      }
+      
       const order: Order = await response.json();
+      if (!order) {
+        throw new Error('Order details not available');
+      }
+      
       onOrderTracked(order);
+      toast({
+        title: 'Order found',
+        description: `Showing details for order #${orderId}`,
+      });
     } catch (error) {
       console.error('Error tracking order:', error);
       toast({
         title: 'Order not found',
-        description: 'Please check the order ID and try again',
+        description: error instanceof Error ? error.message : 'Please check the order ID and try again',
         variant: 'destructive',
       });
     } finally {
