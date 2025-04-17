@@ -229,12 +229,42 @@ export class NeonDBStorage implements IStorage {
   // Product operations
   async getAllProducts(): Promise<Product[]> {
     try {
+      console.log('Fetching all products from database...');
+      
+      // Try direct SQL query first to ensure we can access the data
+      try {
+        const rawResult = await this.client`SELECT * FROM products`;
+        console.log('Raw SQL query result:', rawResult);
+      } catch (sqlError) {
+        console.error('Direct SQL query failed:', sqlError);
+      }
+      
       const result = await this.db.select().from(products);
+      console.log('Products retrieved from database:', result);
+      
+      // If no products found via ORM, fallback to direct SQL
+      if (!result || result.length === 0) {
+        console.log('No products found via ORM, trying direct SQL');
+        const rawProducts = await this.client`SELECT * FROM products`;
+        
+        // Map raw products to our Product type
+        return rawProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          price: Number(p.price),
+          imageUrl: p.image_url
+        }));
+      }
+      
       // Convert decimal strings to numbers for client consistency
-      return result.map(product => ({
+      const formattedProducts = result.map(product => ({
         ...product,
         price: Number(product.price)
       }));
+      
+      console.log('Formatted products:', formattedProducts);
+      return formattedProducts;
     } catch (error) {
       console.error('Error getting all products:', error);
       throw error;
