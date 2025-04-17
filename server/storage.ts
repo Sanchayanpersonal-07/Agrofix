@@ -339,16 +339,8 @@ export class NeonDBStorage implements IStorage {
             `;
             console.log('Users table created');
 
-            // Add a default admin user
-            try {
-              await this.client`
-                INSERT INTO users (username, password, email, role) 
-                VALUES ('admin', 'admin123', 'admin@agrofix.com', 'admin')
-              `;
-              console.log('Default admin user created');
-            } catch (err) {
-              console.log('Admin user might already exist or other error:', err);
-            }
+            // Admin user is now created in setup-admin.ts
+            console.log('Database initialized successfully');
           }
         }
 
