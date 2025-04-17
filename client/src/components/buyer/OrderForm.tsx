@@ -57,7 +57,7 @@ const OrderForm = ({ onOrderSuccess }: OrderFormProps) => {
       // Prepare the order data
       const orderData: InsertOrder = {
         ...data,
-        totalAmount: parseFloat(totalAmount.toString()),
+        totalAmount: totalAmount.toString(),
         items: items.map(item => ({
           productId: item.productId,
           productName: item.productName,

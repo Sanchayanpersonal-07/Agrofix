@@ -21,10 +21,9 @@ export async function setupAdminUser() {
       
       const adminUser = await storage.createUser({
         username: 'admin',
-        password: hashedPassword,
+        password: await hashPassword('admin123'),
         email: 'admin@agrofix.com',
-        role: 'admin',
-        name: 'Admin'
+        role: 'admin'
       });
       
       console.log('Admin user created successfully:', adminUser.username);
