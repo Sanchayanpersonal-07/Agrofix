@@ -15,24 +15,24 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getUserById(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  
+
   // Product operations
   getAllProducts(): Promise<Product[]>;
   getProductById(id: number): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, product: InsertProduct): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
-  
+
   // Order operations
   getAllOrders(): Promise<Order[]>;
   getOrdersByUserId(userId: number): Promise<Order[]>;
   getOrderById(id: number): Promise<Order | undefined>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrderStatus(id: number, status: OrderStatus): Promise<Order | undefined>;
-  
+
   // Email notification
   markOrderAsNotified(id: number): Promise<boolean>;
-  
+
   // Session storage
   sessionStore: any;
 }
@@ -54,7 +54,7 @@ export class MemStorage implements IStorage {
     this.userId = 1;
     this.productId = 1;
     this.orderId = 1;
-    
+
     // Initialize session store with dynamic import for ESM compatibility
     this.sessionStore = null; // Initialize as null first
     import('memorystore').then(memoryStoreModule => {
@@ -65,14 +65,14 @@ export class MemStorage implements IStorage {
     }).catch(err => {
       console.error('Failed to initialize memory session store:', err);
     });
-    
+
     // Initialize with some sample products
     this.initializeSampleProducts();
-    
+
     // Default admin user is now created in setup-admin.ts with proper password hashing
     // Don't create it here to avoid duplicates and password hashing issues
   }
-  
+
   // User operations
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userId++;
@@ -89,27 +89,27 @@ export class MemStorage implements IStorage {
     this.users.set(id, newUser);
     return newUser;
   }
-  
+
   async getUserById(id: number): Promise<User | undefined> {
     return this.users.get(id);
   }
-  
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     const users = Array.from(this.users.values());
     return users.find(user => user.username === username);
   }
-  
+
   // Order operations for user
   async getOrdersByUserId(userId: number): Promise<Order[]> {
     const allOrders = Array.from(this.orders.values());
     return allOrders.filter(order => order.userId === userId);
   }
-  
+
   // Email notification
   async markOrderAsNotified(id: number): Promise<boolean> {
     const order = this.orders.get(id);
     if (!order) return false;
-    
+
     order.emailNotified = true;
     this.orders.set(id, order);
     return true;
@@ -117,36 +117,24 @@ export class MemStorage implements IStorage {
 
   private initializeSampleProducts() {
     const sampleProducts: InsertProduct[] = [
-      {
-        name: 'Fresh Tomatoes',
-        description: 'Premium quality, farm-fresh tomatoes',
-        price: '45',
-        imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8dG9tYXRvfHx8fHx8MTY4OTYzMDM2Mw&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
-      },
-      {
-        name: 'Potatoes',
-        description: 'Fresh farm potatoes, perfect for cooking',
-        price: '25',
-        imageUrl: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8cG90YXRvfHx8fHx8MTY4OTYzMDQxMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
-      },
-      {
-        name: 'Onions',
-        description: 'Premium quality red onions',
-        price: '30',
-        imageUrl: 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8b25pb258fHx8fHwxNjg5NjMwNDYz&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
-      },
-      {
-        name: 'Carrots',
-        description: 'Fresh and crunchy organic carrots',
-        price: '40',
-        imageUrl: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8Y2Fycm90fHx8fHx8MTY4OTYzMDUyMg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
-      }
-    ];
+        {
+          name: 'Fresh Tomatoes',
+          description: 'Premium quality, farm-fresh tomatoes',
+          price: '25.00',
+          imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8dG9tYXRvfHx8fHx8MTY4OTYzMDM2Mw&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
+        },
+        {
+          name: 'Potatoes',
+          description: 'Fresh farm potatoes, perfect for cooking',
+          price: '45.00',
+          imageUrl: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8cG90YXRvfHx8fHx8MTY4OTYzMDQxMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
+        }
+      ];
 
-    sampleProducts.forEach(product => {
-      this.createProduct(product);
-    });
-  }
+      sampleProducts.forEach(product => {
+        this.createProduct(product);
+      });
+    }
 
   // Product operations
   async getAllProducts(): Promise<Product[]> {
@@ -173,7 +161,7 @@ export class MemStorage implements IStorage {
   async updateProduct(id: number, product: InsertProduct): Promise<Product | undefined> {
     const existingProduct = this.products.get(id);
     if (!existingProduct) return undefined;
-    
+
     const updatedProduct: Product = { ...existingProduct, ...product };
     this.products.set(id, updatedProduct);
     return updatedProduct;
@@ -208,7 +196,7 @@ export class MemStorage implements IStorage {
   async updateOrderStatus(id: number, status: OrderStatus): Promise<Order | undefined> {
     const existingOrder = this.orders.get(id);
     if (!existingOrder) return undefined;
-    
+
     const updatedOrder: Order = { ...existingOrder, status };
     this.orders.set(id, updatedOrder);
     return updatedOrder;
@@ -222,24 +210,24 @@ export class NeonDBStorage implements IStorage {
   private initialized: boolean = false;
   private initPromise: Promise<void> | null = null;
   public sessionStore: any;
-  
+
   constructor() {
     try {
       const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
       if (!connectionString) {
         throw new Error('No database connection string provided');
       }
-      
+
       // Initialize Neon database connection with postgres.js
       this.client = postgres(connectionString, {
         ssl: 'require',
         max: 10, // Maximum number of connections
         idle_timeout: 20, // Timeout in seconds
       });
-      
+
       // Create Drizzle ORM instance with postgres.js client
       this.db = drizzle(this.client);
-      
+
       // Initialize session store with PostgreSQL
       // Use dynamic import for ESM compatibility
       import('connect-pg-simple').then(pgSessionModule => {
@@ -255,7 +243,7 @@ export class NeonDBStorage implements IStorage {
       }).catch(err => {
         console.error('Failed to initialize session store:', err);
       });
-      
+
       // Initialize the database with sample products if empty
       this.initPromise = this.initialize();
     } catch (error) {
@@ -263,17 +251,17 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   private async initialize(): Promise<void> {
     try {
       console.log('Initializing NeonDB database connection...');
-      
+
       // Try to create tables directly with SQL if they don't exist
       try {
         // Verify database connection with a simple query
         const testResult = await this.client`SELECT 1 as test`;
         console.log('Database connection test result:', testResult);
-        
+
         // Check if tables exist
         const tables = await this.client`
           SELECT table_name
@@ -281,13 +269,13 @@ export class NeonDBStorage implements IStorage {
           WHERE table_schema = 'public'
             AND table_type = 'BASE TABLE'
         `;
-        
+
         console.log('Database tables:', tables);
-        
+
         const hasProductsTable = tables.some(table => table.table_name === 'products');
         const hasOrdersTable = tables.some(table => table.table_name === 'orders');
         const hasUsersTable = tables.some(table => table.table_name === 'users');
-        
+
         // Create tables if they don't exist
         if (!hasProductsTable || !hasOrdersTable || !hasUsersTable) {
           console.log('Creating database tables...');
@@ -304,7 +292,7 @@ export class NeonDBStorage implements IStorage {
             `;
             console.log('Products table created');
           }
-          
+
           if (!hasOrdersTable) {
             try {
               // Create enum type first
@@ -312,7 +300,7 @@ export class NeonDBStorage implements IStorage {
             } catch (enumError) {
               console.log('Enum type already exists or other error:', enumError);
             }
-            
+
             await this.client`
               CREATE TABLE IF NOT EXISTS orders (
                 id SERIAL PRIMARY KEY,
@@ -330,7 +318,7 @@ export class NeonDBStorage implements IStorage {
             `;
             console.log('Orders table created');
           }
-          
+
           if (!hasUsersTable) {
             try {
               // Create user role enum type first
@@ -338,7 +326,7 @@ export class NeonDBStorage implements IStorage {
             } catch (enumError) {
               console.log('User role enum type already exists or other error:', enumError);
             }
-            
+
             await this.client`
               CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -350,7 +338,7 @@ export class NeonDBStorage implements IStorage {
               )
             `;
             console.log('Users table created');
-            
+
             // Add a default admin user
             try {
               await this.client`
@@ -363,11 +351,11 @@ export class NeonDBStorage implements IStorage {
             }
           }
         }
-        
+
         // Check if products table is empty and add sample data if needed
         const productCount = await this.client`SELECT COUNT(*) FROM products`;
         console.log('Product count:', productCount);
-        
+
         if (productCount[0].count === '0' || productCount[0].count === 0) {
           console.log('Initializing database with sample products...');
           // Add sample products
@@ -384,25 +372,25 @@ export class NeonDBStorage implements IStorage {
       } catch (dbError) {
         console.error('Error setting up database tables:', dbError);
       }
-      
+
       this.initialized = true;
     } catch (error) {
       console.error('Failed to initialize database', error);
       this.initialized = true; // Still mark as initialized to prevent further attempts
     }
   }
-  
+
   private async ensureInitialized() {
     if (!this.initialized && this.initPromise) {
       await this.initPromise;
     }
   }
-  
+
   // Product operations
   async getAllProducts(): Promise<Product[]> {
     try {
       console.log('Fetching all products from database...');
-      
+
       // Try direct SQL query first to ensure we can access the data
       try {
         const rawResult = await this.client`SELECT * FROM products`;
@@ -410,15 +398,15 @@ export class NeonDBStorage implements IStorage {
       } catch (sqlError) {
         console.error('Direct SQL query failed:', sqlError);
       }
-      
+
       const result = await this.db.select().from(products);
       console.log('Products retrieved from database:', result);
-      
+
       // If no products found via ORM, fallback to direct SQL
       if (!result || result.length === 0) {
         console.log('No products found via ORM, trying direct SQL');
         const rawProducts = await this.client`SELECT * FROM products`;
-        
+
         // Map raw products to our Product type
         return rawProducts.map(p => ({
           id: p.id,
@@ -428,13 +416,13 @@ export class NeonDBStorage implements IStorage {
           imageUrl: p.image_url
         }));
       }
-      
+
       // Convert decimal strings to numbers for client consistency
       const formattedProducts = result.map(product => ({
         ...product,
         price: Number(product.price)
       }));
-      
+
       console.log('Formatted products:', formattedProducts);
       return formattedProducts;
     } catch (error) {
@@ -442,12 +430,12 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   async getProductById(id: number): Promise<Product | undefined> {
     try {
       const result = await this.db.select().from(products).where(eq(products.id, id));
       if (result.length === 0) return undefined;
-      
+
       const product = result[0];
       return {
         ...product,
@@ -458,7 +446,7 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   async createProduct(product: InsertProduct): Promise<Product> {
     await this.ensureInitialized();
     try {
@@ -473,7 +461,7 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   async updateProduct(id: number, product: InsertProduct): Promise<Product | undefined> {
     await this.ensureInitialized();
     try {
@@ -482,9 +470,9 @@ export class NeonDBStorage implements IStorage {
         .set(product)
         .where(eq(products.id, id))
         .returning();
-      
+
       if (result.length === 0) return undefined;
-      
+
       const updatedProduct = result[0];
       return {
         ...updatedProduct,
@@ -495,7 +483,7 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   async deleteProduct(id: number): Promise<boolean> {
     await this.ensureInitialized();
     try {
@@ -503,14 +491,14 @@ export class NeonDBStorage implements IStorage {
         .delete(products)
         .where(eq(products.id, id))
         .returning({ id: products.id });
-      
+
       return result.length > 0;
     } catch (error) {
       console.error(`Error deleting product ${id}:`, error);
       throw error;
     }
   }
-  
+
   // Order operations
   async getAllOrders(): Promise<Order[]> {
     try {
@@ -526,12 +514,12 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   async getOrderById(id: number): Promise<Order | undefined> {
     try {
       const result = await this.db.select().from(orders).where(eq(orders.id, id));
       if (result.length === 0) return undefined;
-      
+
       const order = result[0];
       return {
         ...order,
@@ -544,7 +532,7 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   async createOrder(order: InsertOrder): Promise<Order> {
     await this.ensureInitialized();
     try {
@@ -556,7 +544,7 @@ export class NeonDBStorage implements IStorage {
           createdAt: new Date()
         })
         .returning();
-      
+
       const newOrder = result[0];
       return {
         ...newOrder,
@@ -569,7 +557,7 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   async updateOrderStatus(id: number, status: OrderStatus): Promise<Order | undefined> {
     await this.ensureInitialized();
     try {
@@ -578,9 +566,9 @@ export class NeonDBStorage implements IStorage {
         .set({ status })
         .where(eq(orders.id, id))
         .returning();
-      
+
       if (result.length === 0) return undefined;
-      
+
       const updatedOrder = result[0];
       return {
         ...updatedOrder,
@@ -593,7 +581,7 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   // Order operations for user
   async getOrdersByUserId(userId: number): Promise<Order[]> {
     try {
@@ -601,7 +589,7 @@ export class NeonDBStorage implements IStorage {
         .select()
         .from(orders)
         .where(eq(orders.userId, userId));
-      
+
       return result.map(order => ({
         ...order,
         totalAmount: Number(order.totalAmount),
@@ -613,7 +601,7 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   // Email notification
   async markOrderAsNotified(id: number): Promise<boolean> {
     await this.ensureInitialized();
@@ -623,14 +611,14 @@ export class NeonDBStorage implements IStorage {
         .set({ emailNotified: true })
         .where(eq(orders.id, id))
         .returning({ id: orders.id });
-      
+
       return result.length > 0;
     } catch (error) {
       console.error(`Error marking order ${id} as notified:`, error);
       throw error;
     }
   }
-  
+
   // User operations
   async createUser(user: InsertUser): Promise<User> {
     await this.ensureInitialized();
@@ -642,21 +630,21 @@ export class NeonDBStorage implements IStorage {
           createdAt: new Date()
         })
         .returning();
-      
+
       return result[0];
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
     }
   }
-  
+
   async getUserById(id: number): Promise<User | undefined> {
     try {
       const result = await this.db
         .select()
         .from(users)
         .where(eq(users.id, id));
-      
+
       if (result.length === 0) return undefined;
       return result[0];
     } catch (error) {
@@ -664,14 +652,14 @@ export class NeonDBStorage implements IStorage {
       throw error;
     }
   }
-  
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     try {
       const result = await this.db
         .select()
         .from(users)
         .where(eq(users.username, username));
-      
+
       if (result.length === 0) return undefined;
       return result[0];
     } catch (error) {

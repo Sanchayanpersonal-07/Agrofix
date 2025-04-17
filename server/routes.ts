@@ -40,14 +40,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: 1,
             name: 'Fresh Tomatoes',
             description: 'Premium quality, farm-fresh tomatoes',
-            price: 45,
+            price: 25,
             imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8dG9tYXRvfHx8fHx8MTY4OTYzMDM2Mw&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
           },
           {
             id: 2,
             name: 'Potatoes',
             description: 'Fresh farm potatoes, perfect for cooking',
-            price: 25,
+            price: 45,
             imageUrl: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8cG90YXRvfHx8fHx8MTY4OTYzMDQxMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
           },
           {
