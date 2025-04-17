@@ -304,6 +304,7 @@ export class NeonDBStorage implements IStorage {
             await this.client`
               CREATE TABLE IF NOT EXISTS orders (
                 id SERIAL PRIMARY KEY,
+                userid INTEGER REFERENCES users(id),
                 customer_name TEXT NOT NULL,
                 customer_email TEXT NOT NULL,
                 customer_phone TEXT NOT NULL,
@@ -313,7 +314,8 @@ export class NeonDBStorage implements IStorage {
                 total_amount DECIMAL(10, 2) NOT NULL,
                 status order_status NOT NULL DEFAULT 'pending',
                 items JSONB NOT NULL,
-                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                email_notified BOOLEAN DEFAULT false
               )
             `;
             console.log('Orders table created');
