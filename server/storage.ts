@@ -69,13 +69,8 @@ export class MemStorage implements IStorage {
     // Initialize with some sample products
     this.initializeSampleProducts();
     
-    // Create a default admin user
-    this.createUser({
-      username: 'admin',
-      password: 'admin123', // In a real app, this would be hashed
-      email: 'admin@agrofix.com',
-      role: 'admin'
-    });
+    // Default admin user is now created in setup-admin.ts with proper password hashing
+    // Don't create it here to avoid duplicates and password hashing issues
   }
   
   // User operations

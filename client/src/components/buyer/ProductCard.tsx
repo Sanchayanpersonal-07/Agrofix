@@ -3,8 +3,16 @@ import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 
 const ProductCard = ({ product, onAddToOrder }: ProductCardProps) => {
+  const handleAddToOrder = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onAddToOrder(product);
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+    <div 
+      className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+      onClick={handleAddToOrder}
+    >
       <div className="h-48 bg-gray-200 relative">
         {product.imageUrl && (
           <img 
@@ -21,7 +29,10 @@ const ProductCard = ({ product, onAddToOrder }: ProductCardProps) => {
         <h3 className="font-semibold text-lg text-gray-800 mb-1">{product.name}</h3>
         <p className="text-gray-600 text-sm mb-3">{product.description}</p>
         <Button 
-          onClick={() => onAddToOrder(product)}
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent card click event
+            onAddToOrder(product);
+          }}
           className="w-full bg-primary-500 hover:bg-primary-600 text-white"
           size="sm"
         >
