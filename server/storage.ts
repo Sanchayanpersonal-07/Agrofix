@@ -55,10 +55,15 @@ export class MemStorage implements IStorage {
     this.productId = 1;
     this.orderId = 1;
     
-    // Initialize session store
-    const MemoryStore = require('memorystore')(session);
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000 // 24 hours
+    // Initialize session store with dynamic import for ESM compatibility
+    this.sessionStore = null; // Initialize as null first
+    import('memorystore').then(memoryStoreModule => {
+      const MemoryStore = memoryStoreModule.default(session);
+      this.sessionStore = new MemoryStore({
+        checkPeriod: 86400000 // 24 hours
+      });
+    }).catch(err => {
+      console.error('Failed to initialize memory session store:', err);
     });
     
     // Initialize with some sample products
@@ -71,6 +76,48 @@ export class MemStorage implements IStorage {
       email: 'admin@agrofix.com',
       role: 'admin'
     });
+  }
+  
+  // User operations
+  async createUser(user: InsertUser): Promise<User> {
+    const id = this.userId++;
+    const now = new Date();
+    const role = user.role || 'buyer'; // Default to 'buyer' if role is not provided
+    const newUser: User = {
+      id,
+      username: user.username,
+      password: user.password,
+      email: user.email,
+      role: role,
+      createdAt: now
+    };
+    this.users.set(id, newUser);
+    return newUser;
+  }
+  
+  async getUserById(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const users = Array.from(this.users.values());
+    return users.find(user => user.username === username);
+  }
+  
+  // Order operations for user
+  async getOrdersByUserId(userId: number): Promise<Order[]> {
+    const allOrders = Array.from(this.orders.values());
+    return allOrders.filter(order => order.userId === userId);
+  }
+  
+  // Email notification
+  async markOrderAsNotified(id: number): Promise<boolean> {
+    const order = this.orders.get(id);
+    if (!order) return false;
+    
+    order.emailNotified = true;
+    this.orders.set(id, order);
+    return true;
   }
 
   private initializeSampleProducts() {
@@ -179,6 +226,7 @@ export class NeonDBStorage implements IStorage {
   private client;
   private initialized: boolean = false;
   private initPromise: Promise<void> | null = null;
+  public sessionStore: any;
   
   constructor() {
     try {
@@ -196,6 +244,22 @@ export class NeonDBStorage implements IStorage {
       
       // Create Drizzle ORM instance with postgres.js client
       this.db = drizzle(this.client);
+      
+      // Initialize session store with PostgreSQL
+      // Use dynamic import for ESM compatibility
+      import('connect-pg-simple').then(pgSessionModule => {
+        const PgSession = pgSessionModule.default(session);
+        this.sessionStore = new PgSession({
+          conObject: {
+            connectionString: connectionString,
+            ssl: { rejectUnauthorized: false }
+          },
+          createTableIfMissing: true,
+          tableName: 'session'
+        });
+      }).catch(err => {
+        console.error('Failed to initialize session store:', err);
+      });
       
       // Initialize the database with sample products if empty
       this.initPromise = this.initialize();
@@ -227,9 +291,10 @@ export class NeonDBStorage implements IStorage {
         
         const hasProductsTable = tables.some(table => table.table_name === 'products');
         const hasOrdersTable = tables.some(table => table.table_name === 'orders');
+        const hasUsersTable = tables.some(table => table.table_name === 'users');
         
         // Create tables if they don't exist
-        if (!hasProductsTable || !hasOrdersTable) {
+        if (!hasProductsTable || !hasOrdersTable || !hasUsersTable) {
           console.log('Creating database tables...');
           // Create tables directly with SQL for simplicity
           if (!hasProductsTable) {
@@ -269,6 +334,38 @@ export class NeonDBStorage implements IStorage {
               )
             `;
             console.log('Orders table created');
+          }
+          
+          if (!hasUsersTable) {
+            try {
+              // Create user role enum type first
+              await this.client`CREATE TYPE user_role AS ENUM ('buyer', 'admin')`;
+            } catch (enumError) {
+              console.log('User role enum type already exists or other error:', enumError);
+            }
+            
+            await this.client`
+              CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                email TEXT NOT NULL,
+                role user_role NOT NULL DEFAULT 'buyer',
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+              )
+            `;
+            console.log('Users table created');
+            
+            // Add a default admin user
+            try {
+              await this.client`
+                INSERT INTO users (username, password, email, role) 
+                VALUES ('admin', 'admin123', 'admin@agrofix.com', 'admin')
+              `;
+              console.log('Default admin user created');
+            } catch (err) {
+              console.log('Admin user might already exist or other error:', err);
+            }
           }
         }
         
@@ -425,7 +522,9 @@ export class NeonDBStorage implements IStorage {
       const result = await this.db.select().from(orders);
       return result.map(order => ({
         ...order,
-        totalAmount: Number(order.totalAmount)
+        totalAmount: Number(order.totalAmount),
+        userId: order.userId === null ? undefined : order.userId,
+        emailNotified: order.emailNotified === null ? undefined : order.emailNotified
       }));
     } catch (error) {
       console.error('Error getting all orders:', error);
@@ -441,7 +540,8 @@ export class NeonDBStorage implements IStorage {
       const order = result[0];
       return {
         ...order,
-        totalAmount: Number(order.totalAmount)
+        totalAmount: Number(order.totalAmount),
+        userId: order.userId === null ? undefined : order.userId
       };
     } catch (error) {
       console.error(`Error getting order ${id}:`, error);
@@ -464,7 +564,9 @@ export class NeonDBStorage implements IStorage {
       const newOrder = result[0];
       return {
         ...newOrder,
-        totalAmount: Number(newOrder.totalAmount)
+        totalAmount: Number(newOrder.totalAmount),
+        userId: newOrder.userId === null ? undefined : newOrder.userId,
+        emailNotified: newOrder.emailNotified === null ? undefined : newOrder.emailNotified
       };
     } catch (error) {
       console.error('Error creating order:', error);
@@ -490,6 +592,90 @@ export class NeonDBStorage implements IStorage {
       };
     } catch (error) {
       console.error(`Error updating order status ${id}:`, error);
+      throw error;
+    }
+  }
+  
+  // Order operations for user
+  async getOrdersByUserId(userId: number): Promise<Order[]> {
+    try {
+      const result = await this.db
+        .select()
+        .from(orders)
+        .where(eq(orders.userId, userId));
+      
+      return result.map(order => ({
+        ...order,
+        totalAmount: Number(order.totalAmount)
+      }));
+    } catch (error) {
+      console.error(`Error getting orders for user ${userId}:`, error);
+      throw error;
+    }
+  }
+  
+  // Email notification
+  async markOrderAsNotified(id: number): Promise<boolean> {
+    await this.ensureInitialized();
+    try {
+      const result = await this.db
+        .update(orders)
+        .set({ emailNotified: true })
+        .where(eq(orders.id, id))
+        .returning({ id: orders.id });
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error(`Error marking order ${id} as notified:`, error);
+      throw error;
+    }
+  }
+  
+  // User operations
+  async createUser(user: InsertUser): Promise<User> {
+    await this.ensureInitialized();
+    try {
+      const result = await this.db
+        .insert(users)
+        .values({
+          ...user,
+          createdAt: new Date()
+        })
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+  
+  async getUserById(id: number): Promise<User | undefined> {
+    try {
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.id, id));
+      
+      if (result.length === 0) return undefined;
+      return result[0];
+    } catch (error) {
+      console.error(`Error getting user ${id}:`, error);
+      throw error;
+    }
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    try {
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.username, username));
+      
+      if (result.length === 0) return undefined;
+      return result[0];
+    } catch (error) {
+      console.error(`Error getting user by username ${username}:`, error);
       throw error;
     }
   }

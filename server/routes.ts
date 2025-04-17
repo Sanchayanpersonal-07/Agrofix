@@ -1,10 +1,14 @@
 import { Router, type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth } from "./auth";
 import { insertProductSchema, insertOrderSchema, updateOrderStatusSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
+  
   const apiRouter = Router();
 
   // Error handler for validation errors
