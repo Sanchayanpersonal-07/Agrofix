@@ -354,9 +354,9 @@ export class NeonDBStorage implements IStorage {
           await this.client`
             INSERT INTO products (name, description, price, image_url)
             VALUES 
-              ('Fresh Tomatoes', 'Premium quality, farm-fresh tomatoes', 45, 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8dG9tYXRvfHx8fHx8MTY4OTYzMDM2Mw&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'),
-              ('Potatoes', 'Fresh farm potatoes, perfect for cooking', 25, 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8cG90YXRvfHx8fHx8MTY4OTYzMDQxMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'),
-              ('Onions', 'Premium quality red onions', 30, 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8b25pb258fHx8fHwxNjg5NjMwNDYz&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'),
+              ('Fresh Tomatoes', 'Premium quality, farm-fresh tomatoes', 45, 'https://images.unsplash.com/photo-1546470427-e26b1345496e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&w=480'),
+              ('Potatoes', 'Fresh farm potatoes, perfect for cooking', 25, 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&w=480'),
+              ('Onions', 'Premium quality red onions', 30, 'https://images.unsplash.com/photo-1580201092675-a0a6a6cafbb1?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&w=480'),
               ('Carrots', 'Fresh and crunchy organic carrots', 40, 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8Y2Fycm90fHx8fHx8MTY4OTYzMDUyMg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480')
           `;
           console.log('Sample products added to database');
