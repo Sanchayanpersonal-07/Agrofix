@@ -1,8 +1,9 @@
-import { products, Product, InsertProduct, orders, Order, InsertOrder, OrderStatus } from "@shared/schema";
+import { products, Product, InsertProduct, orders, Order, InsertOrder, OrderStatus, users, User, InsertUser } from "@shared/schema";
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq } from 'drizzle-orm';
 import "dotenv/config";
+import session from 'express-session';
 
 // For TypeScript, specify types for product and order map
 type ProductMap = Map<number, Product>;
@@ -10,6 +11,11 @@ type OrderMap = Map<number, Order>;
 
 // Interface for CRUD operations
 export interface IStorage {
+  // User operations
+  createUser(user: InsertUser): Promise<User>;
+  getUserById(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  
   // Product operations
   getAllProducts(): Promise<Product[]>;
   getProductById(id: number): Promise<Product | undefined>;
@@ -19,26 +25,52 @@ export interface IStorage {
   
   // Order operations
   getAllOrders(): Promise<Order[]>;
+  getOrdersByUserId(userId: number): Promise<Order[]>;
   getOrderById(id: number): Promise<Order | undefined>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrderStatus(id: number, status: OrderStatus): Promise<Order | undefined>;
+  
+  // Email notification
+  markOrderAsNotified(id: number): Promise<boolean>;
+  
+  // Session storage
+  sessionStore: any;
 }
 
 // In-memory storage implementation (fallback)
 export class MemStorage implements IStorage {
+  private users: Map<number, User>;
   private products: Map<number, Product>;
   private orders: Map<number, Order>;
+  private userId: number;
   private productId: number;
   private orderId: number;
+  public sessionStore: any;
 
   constructor() {
+    this.users = new Map();
     this.products = new Map();
     this.orders = new Map();
+    this.userId = 1;
     this.productId = 1;
     this.orderId = 1;
     
+    // Initialize session store
+    const MemoryStore = require('memorystore')(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // 24 hours
+    });
+    
     // Initialize with some sample products
     this.initializeSampleProducts();
+    
+    // Create a default admin user
+    this.createUser({
+      username: 'admin',
+      password: 'admin123', // In a real app, this would be hashed
+      email: 'admin@agrofix.com',
+      role: 'admin'
+    });
   }
 
   private initializeSampleProducts() {
