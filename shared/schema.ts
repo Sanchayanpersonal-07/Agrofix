@@ -51,13 +51,31 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
 });
 
 export const updateOrderStatusSchema = z.object({
-  status: orderStatusEnum.enum
+  status: z.enum(['pending', 'in_progress', 'delivered'])
 });
 
 // Types
-export type Product = typeof products.$inferSelect;
+export type Product = {
+  id: number;
+  name: string;
+  description: string | null;
+  price: string | number; // Allow both string and number to handle conversion
+  imageUrl: string | null;
+};
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type OrderItem = z.infer<typeof orderItemSchema>;
-export type Order = typeof orders.$inferSelect;
+export type Order = {
+  id: number;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  deliveryAddress: string;
+  deliveryCity: string;
+  deliveryPincode: string;
+  totalAmount: string | number; // Allow both string and number to handle conversion
+  status: OrderStatus;
+  items: unknown;
+  createdAt: Date;
+};
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type OrderStatus = 'pending' | 'in_progress' | 'delivered';
