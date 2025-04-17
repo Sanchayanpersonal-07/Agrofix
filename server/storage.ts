@@ -175,48 +175,96 @@ export class NeonDBStorage implements IStorage {
   
   private async initialize(): Promise<void> {
     try {
-      // Check if products table is empty
-      const existingProducts = await this.getAllProducts();
+      console.log('Initializing NeonDB database connection...');
       
-      if (existingProducts.length === 0) {
-        console.log('Initializing database with sample products...');
-        const sampleProducts: InsertProduct[] = [
-          {
-            name: 'Fresh Tomatoes',
-            description: 'Premium quality, farm-fresh tomatoes',
-            price: '45',
-            imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8dG9tYXRvfHx8fHx8MTY4OTYzMDM2Mw&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
-          },
-          {
-            name: 'Potatoes',
-            description: 'Fresh farm potatoes, perfect for cooking',
-            price: '25',
-            imageUrl: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8cG90YXRvfHx8fHx8MTY4OTYzMDQxMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
-          },
-          {
-            name: 'Onions',
-            description: 'Premium quality red onions',
-            price: '30',
-            imageUrl: 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8b25pb258fHx8fHwxNjg5NjMwNDYz&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
-          },
-          {
-            name: 'Carrots',
-            description: 'Fresh and crunchy organic carrots',
-            price: '40',
-            imageUrl: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8Y2Fycm90fHx8fHx8MTY4OTYzMDUyMg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'
-          }
-        ];
+      // Try to create tables directly with SQL if they don't exist
+      try {
+        // Verify database connection with a simple query
+        const testResult = await this.client`SELECT 1 as test`;
+        console.log('Database connection test result:', testResult);
         
-        // Insert sample products
-        for (const product of sampleProducts) {
-          await this.createProduct(product);
+        // Check if tables exist
+        const tables = await this.client`
+          SELECT table_name
+          FROM information_schema.tables
+          WHERE table_schema = 'public'
+            AND table_type = 'BASE TABLE'
+        `;
+        
+        console.log('Database tables:', tables);
+        
+        const hasProductsTable = tables.some(table => table.table_name === 'products');
+        const hasOrdersTable = tables.some(table => table.table_name === 'orders');
+        
+        // Create tables if they don't exist
+        if (!hasProductsTable || !hasOrdersTable) {
+          console.log('Creating database tables...');
+          // Create tables directly with SQL for simplicity
+          if (!hasProductsTable) {
+            await this.client`
+              CREATE TABLE IF NOT EXISTS products (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                price DECIMAL(10, 2) NOT NULL,
+                image_url TEXT
+              )
+            `;
+            console.log('Products table created');
+          }
+          
+          if (!hasOrdersTable) {
+            try {
+              // Create enum type first
+              await this.client`CREATE TYPE order_status AS ENUM ('pending', 'in_progress', 'delivered')`;
+            } catch (enumError) {
+              console.log('Enum type already exists or other error:', enumError);
+            }
+            
+            await this.client`
+              CREATE TABLE IF NOT EXISTS orders (
+                id SERIAL PRIMARY KEY,
+                customer_name TEXT NOT NULL,
+                customer_email TEXT NOT NULL,
+                customer_phone TEXT NOT NULL,
+                delivery_address TEXT NOT NULL,
+                delivery_city TEXT NOT NULL,
+                delivery_pincode TEXT NOT NULL,
+                total_amount DECIMAL(10, 2) NOT NULL,
+                status order_status NOT NULL DEFAULT 'pending',
+                items JSONB NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+              )
+            `;
+            console.log('Orders table created');
+          }
         }
+        
+        // Check if products table is empty and add sample data if needed
+        const productCount = await this.client`SELECT COUNT(*) FROM products`;
+        console.log('Product count:', productCount);
+        
+        if (productCount[0].count === '0' || productCount[0].count === 0) {
+          console.log('Initializing database with sample products...');
+          // Add sample products
+          await this.client`
+            INSERT INTO products (name, description, price, image_url)
+            VALUES 
+              ('Fresh Tomatoes', 'Premium quality, farm-fresh tomatoes', 45, 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8dG9tYXRvfHx8fHx8MTY4OTYzMDM2Mw&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'),
+              ('Potatoes', 'Fresh farm potatoes, perfect for cooking', 25, 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8cG90YXRvfHx8fHx8MTY4OTYzMDQxMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'),
+              ('Onions', 'Premium quality red onions', 30, 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8b25pb258fHx8fHwxNjg5NjMwNDYz&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480'),
+              ('Carrots', 'Fresh and crunchy organic carrots', 40, 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=360&ixid=MnwxfDB8MXxyYW5kb218MHx8Y2Fycm90fHx8fHx8MTY4OTYzMDUyMg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=480')
+          `;
+          console.log('Sample products added to database');
+        }
+      } catch (dbError) {
+        console.error('Error setting up database tables:', dbError);
       }
       
       this.initialized = true;
     } catch (error) {
       console.error('Failed to initialize database', error);
-      throw error;
+      this.initialized = true; // Still mark as initialized to prevent further attempts
     }
   }
   
