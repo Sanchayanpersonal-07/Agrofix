@@ -51,25 +51,26 @@ const Home = () => {
   
   return (
     <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
-          {['Product Catalog', 'Place Order', 'Track Order'].map((tabName, index) => (
-            <button
-              key={index}
-              onClick={() => setSelectedTab(index)}
-              className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
-                selectedTab === index
-                  ? 'border-primary-500 text-primary-500'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              {tabName}
-            </button>
-          ))}
-        </nav>
-      </div>
-      
       <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
+        <Tab.List className="border-b border-gray-200 mb-6">
+          <div className="-mb-px flex space-x-8">
+            {['Product Catalog', 'Place Order', 'Track Order'].map((tabName, index) => (
+              <Tab
+                key={index}
+                className={({ selected }) => `
+                  whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm outline-none
+                  ${selected
+                    ? 'border-primary-500 text-primary-500'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+              >
+                {tabName}
+              </Tab>
+            ))}
+          </div>
+        </Tab.List>
+        
         <Tab.Panels>
           {/* Catalog View */}
           <Tab.Panel>

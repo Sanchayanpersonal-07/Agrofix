@@ -6,6 +6,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import Header from "@/components/layout/Header";
+import { CartProvider } from "@/store/CartContext";
 
 function Router() {
   return (
@@ -23,8 +24,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <CartProvider>
+        <Router />
+        <Toaster />
+      </CartProvider>
     </QueryClientProvider>
   );
 }
